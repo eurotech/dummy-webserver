@@ -1,0 +1,20 @@
+#!/usr/bin/env sh
+
+# Generate dummy certificate
+answers() {
+	echo --
+	echo SomeState
+	echo SomeCity
+	echo SomeOrganization
+	echo SomeOrganizationalUnit
+	echo localhost.localdomain
+	echo root@localhost.localdomain
+}
+PEM1=`/bin/mktemp /tmp/openssl.XXXXXX`
+PEM2=`/bin/mktemp /tmp/openssl.XXXXXX`
+answers | /usr/bin/openssl req -newkey rsa:2048 -keyout $PEM1 -nodes -x509 -days 365 -out $PEM2 2> /dev/null
+cat $PEM1 >  /etc/ssl/certs/dummy.crt
+cat $PEM2 >> /etc/ssl/certs/dummy.crt
+
+# Start server
+/usr/local/bin/server
