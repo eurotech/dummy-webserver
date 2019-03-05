@@ -20,4 +20,4 @@ There are few customizations doable via environment variables:
 - HTTPS_PORT: port for the HTTPS endpoint
 - MGMT_PORT: port for the managements endpoint
 - CREDENTIALS: credentials for basic auth in the "username:password" format
-- CERTIFICATE: path to a mounted custom certificate
+- CERTIFICATE_PATH: path to a mounted custom certificate
