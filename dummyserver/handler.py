@@ -38,13 +38,12 @@ class DummyHandler(BaseHTTPHandler):
 
 class HTTPHandler(BaseHTTPHandler):
 
-    def __init__(self, credentials):
-        self.credentials = credentials
+    credentials = ''
 
     def do_GET(self):
         if self.path == '/fail':
             self.send_response(self._generateRandomCode())
-        elif ( len(self.credentials) > 0 ):
+        elif ( len(HTTPHandler.credentials) > 0 ):
             if self._checkAuth():
                 self.send_response(200)
             else:
@@ -64,7 +63,7 @@ class HTTPHandler(BaseHTTPHandler):
 
         if self.path == '/fail':
             self.send_response(self._generateRandomCode())
-        elif ( len(self.credentials) > 0 and not self._checkAuth() ):
+        elif ( len(HTTPHandler.credentials) > 0 and not self._checkAuth() ):
             self.send_response(401)
             self.send_header('WWW-Authenticate', 'Test')
         else:
@@ -101,7 +100,7 @@ class HTTPHandler(BaseHTTPHandler):
     def _checkAuth(self):
         try:
             credentials = self.headers['Authorization']
-            expected = 'Basic ' + self.credentials.decode('UTF')
+            expected = 'Basic ' + HTTPHandler.credentials.decode('UTF')
             print("Matching {} with {}".format(credentials, expected))
             return credentials == expected
         except:

@@ -26,6 +26,6 @@ RUN apk add --no-cache curl python3 openssl && \
     pip install /tmp/dummyserver.tar.gz && \
     rm -f /tmp/get-pip.py /tmp/dummyserver.tar.gz
 
-EXPOSE 8080 8181 8182 8282
+EXPOSE 8080 8181 8282 8383
 
 ENTRYPOINT [ "/entrypoint"]

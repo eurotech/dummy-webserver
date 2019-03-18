@@ -1,0 +1,21 @@
+[ req ]
+default_bits       = 2048
+distinguished_name = req_distinguished_name
+req_extensions     = req_ext
+x509_extensions    = req_ext
+extensions         = req_ext
+
+[ req_distinguished_name ]
+countryName                = Country Name (2 letter code)
+stateOrProvinceName        = State or Province Name (full name)
+organizationName           = Organization Name (eg, company)
+commonName                 = Common Name (e.g. server FQDN or YOUR name)
+
+[req_ext]
+keyUsage = critical, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1   = localhost
+IP.1    = 127.0.0.1

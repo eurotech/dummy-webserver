@@ -36,7 +36,7 @@ lint: venv
 	${PYTHON} -m pylint dummyserver
 
 test: venv
-	${PYTEST} tests
+	${PYTEST} test
 
 run: venv
 	${PYTHON} dummyserver
