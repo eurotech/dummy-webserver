@@ -18,6 +18,8 @@ There are few customizations doable via environment variables:
 
 - HTTP_PORT: port for the HTTP endpoint
 - HTTPS_PORT: port for the HTTPS endpoint
+- HTTPSM_PORT: port for the HTTPS endpoint with enforced mutual authentication
 - MGMT_PORT: port for the managements endpoint
 - CREDENTIALS: credentials for basic auth in the "username:password" format
-- CERTIFICATE_PATH: path to a mounted custom certificate
+- SERVER_CRT_PATH: path to a mounted custom certificate
+- CLIENT_CA_PATH: path to a CA chain file used for client certificate validation

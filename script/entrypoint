@@ -16,5 +16,7 @@ answers | /usr/bin/openssl req -newkey rsa:2048 -keyout $PEM1 -nodes -x509 -days
 cat $PEM1 >  /etc/ssl/certs/dummy.crt
 cat $PEM2 >> /etc/ssl/certs/dummy.crt
 
+cat $PEM2 >  /etc/ssl/certs/dummy_ca.crt
+
 # Start server
-/usr/local/bin/server
+/usr/bin/dummyserver
