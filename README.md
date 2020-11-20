@@ -7,8 +7,10 @@ It exposes 3 different endpoints:
 
 - HTTP: responds to GET/POST requests. Special paths:
   - /fail returns an error code
+  - /delayed return a 500 error after 1 to 10 seconds
 - HTTPS: responds to GET/POST requests. Special paths:
   - /fail returns an error code
+  - /delayed return a 500 error after 1 to 10 seconds
 - MANAGEMENT: Special paths:
   - /stats prints how many times a particular path has been called
   - /history prints the recorded history of all the requests

@@ -1,9 +1,12 @@
 import http.server
 import json
 import random
+import time
 import threading
 
 lock = threading.Lock()
+
+CONTENT_TYPE = 'application/json'
 
 class BaseHTTPHandler(http.server.BaseHTTPRequestHandler):
     pass
@@ -15,7 +18,7 @@ class DummyHandler(BaseHTTPHandler):
 
     def do_GET(self):
         self.send_response(200)
-        self.send_header('Content-type','application/json')
+        self.send_header('Content-type', CONTENT_TYPE)
         self.end_headers()
 
         if self.path == '/stats':
@@ -24,7 +27,6 @@ class DummyHandler(BaseHTTPHandler):
             self.wfile.write(json.dumps(self._getHistory()).encode('UTF-8'))
         elif self.path == '/clear':
             self._clear()
-        return
 
     def _clear(self):
         DummyHandler._stats = {}
@@ -43,6 +45,9 @@ class HTTPHandler(BaseHTTPHandler):
     def do_GET(self):
         if self.path == '/fail':
             self.send_response(self._generateRandomCode())
+        elif self.path == '/delayed':
+            time.sleep(self._generateDelay())
+            self.send_response(500)
         elif ( len(HTTPHandler.credentials) > 0 ):
             if self._checkAuth():
                 self.send_response(200)
@@ -52,17 +57,19 @@ class HTTPHandler(BaseHTTPHandler):
         else:
             self.send_response(200)
 
-        self.send_header('Content-type','application/json')
+        self.send_header('Content-type', CONTENT_TYPE)
         self.end_headers()
 
         self._record()
-        return
 
     def do_POST(self):
         body = ''
 
         if self.path == '/fail':
             self.send_response(self._generateRandomCode())
+        elif self.path == '/delayed':
+            time.sleep(self._generateDelay())
+            self.send_response(500)
         elif ( len(HTTPHandler.credentials) > 0 and not self._checkAuth() ):
             self.send_response(401)
             self.send_header('WWW-Authenticate', 'Test')
@@ -76,11 +83,10 @@ class HTTPHandler(BaseHTTPHandler):
             except:
                 self.send_response(400)
 
-        self.send_header('Content-type','application/json')
+        self.send_header('Content-type', CONTENT_TYPE)
         self.end_headers()
 
         self._record(body)
-        return
 
     def _record(self, body=''):
         with lock:
@@ -96,6 +102,9 @@ class HTTPHandler(BaseHTTPHandler):
 
     def _generateRandomCode(self):
         return random.choice(list(range(402, 418))+list(range(500, 505)))
+
+    def _generateDelay(self):
+        return float(random.choice(range(1000, 10000))) / 1000
 
     def _checkAuth(self):
         try:
