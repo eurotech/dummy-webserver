@@ -1,12 +1,23 @@
 import http.server
 import json
+import logging
+import os
 import random
+import requests
 import time
 import threading
 
 lock = threading.Lock()
 
 CONTENT_TYPE = 'application/json'
+INTROSPECT_URL = os.environ.get('INTROSPECT_URL')
+
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+
+LOGGER = logging.getLogger(__name__)
 
 class BaseHTTPHandler(http.server.BaseHTTPRequestHandler):
     pass
@@ -110,8 +121,22 @@ class HTTPHandler(BaseHTTPHandler):
         try:
             credentials = self.headers['Authorization']
             expected = 'Basic ' + HTTPHandler.credentials.decode('UTF')
-            print("Matching {} with {}".format(credentials, expected))
-            return credentials == expected
+            if credentials.startswith('Bearer '):
+                LOGGER.info("Got Bearer auth: {}".format(credentials))
+                return self._introspect(credentials[7:])
+            else:
+                LOGGER.info("Matching {} with {}".format(credentials, expected))
+                return credentials == expected
         except:
-            print("No Authorization header present")
+            LOGGER.info("No Authorization header present")
             return False
+
+    def _introspect(self, token_string):
+        LOGGER.info("Introspect token: {}".format(token_string))
+        data = {'token' : token_string, 'token_type_hint' : 'access_token'}
+        auth = ("dummyUser", "dummyPass")
+        resp = requests.post(INTROSPECT_URL, data=data, auth=auth, verify=False)
+
+        LOGGER.info("Introspect status_code: {}, response: {}".format(resp.status_code, resp.json()))
+
+        return resp.status_code == 200 and resp.json().get('active') == True
