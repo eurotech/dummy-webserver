@@ -1,6 +1,6 @@
 # Build container
 
-FROM alpine:3.8 as build
+FROM alpine:3.17.1 as build
 
 RUN apk add build-base curl git make python3 python3-dev
 
@@ -15,7 +15,7 @@ RUN make package
 
 # Distribution container
 
-FROM alpine:3.8
+FROM alpine:3.17.1
 
 COPY --from=build /opt/dummyserver/dist/dummyserver-*.tar.gz /tmp/dummyserver.tar.gz
 COPY ./script/entrypoint /entrypoint
