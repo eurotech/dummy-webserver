@@ -23,7 +23,7 @@ COPY ./script/entrypoint /entrypoint
 RUN apk add --no-cache curl python3 openssl && \
     curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py && \
     python3 /tmp/get-pip.py && \
-    pip install /tmp/dummyserver.tar.gz && \
+    pip install requests /tmp/dummyserver.tar.gz && \
     rm -f /tmp/get-pip.py /tmp/dummyserver.tar.gz
 
 EXPOSE 8080 8181 8282 8383
