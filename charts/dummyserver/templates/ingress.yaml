@@ -1,0 +1,46 @@
+---
+{{- if eq .Values.ingress.enabled true }}
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: {{ include "dummyserver.fullname" . }}
+  labels:
+    {{- include "dummyserver.labels" . | nindent 4 }}
+  annotations:
+    {{- range $key,$val := .Values.ingress.annotations }}
+    {{ $key }}: {{ $val | quote }}
+    {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+  - http:
+      paths:
+      - pathType: Prefix
+        path: /stats
+        backend:
+          service:
+            name: {{ include "dummyserver.fullname" . }}
+            port:
+              number: 8383
+      - pathType: Prefix
+        path: /history
+        backend:
+          service:
+            name: {{ include "dummyserver.fullname" . }}
+            port:
+              number: 8383
+      - pathType: Prefix
+        path: /clear
+        backend:
+          service:
+            name: {{ include "dummyserver.fullname" . }}
+            port:
+              number: 8383
+      - pathType: Prefix
+        path: {{ .Values.ingress.basepath }}
+        backend:
+          service:
+            name: {{ include "dummyserver.fullname" . }}
+            port:
+              number: 8080
+{{- end }}

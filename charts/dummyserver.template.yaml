@@ -1,0 +1,163 @@
+NAME: dummyserver
+LAST DEPLOYED: Fri Jun  9 11:47:20 2023
+NAMESPACE: default
+STATUS: pending-install
+REVISION: 1
+HOOKS:
+---
+# Source: dummyserver/templates/tests/test-connection.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "dummyserver-test-connection"
+  labels:
+    helm.sh/chart: dummyserver-0.1.0
+    app.kubernetes.io/name: dummyserver
+    app.kubernetes.io/instance: dummyserver
+    app.kubernetes.io/version: "0.6.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['dummyserver:']
+  restartPolicy: Never
+MANIFEST:
+---
+# Source: dummyserver/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: dummyserver
+  labels:
+    helm.sh/chart: dummyserver-0.1.0
+    app.kubernetes.io/name: dummyserver
+    app.kubernetes.io/instance: dummyserver
+    app.kubernetes.io/version: "0.6.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+      name: http
+    - port: 8181
+      targetPort: 8181
+      protocol: TCP
+      name: https
+    - port: 8383
+      targetPort: 8383
+      protocol: TCP
+      name: mgmt
+  selector:
+    app.kubernetes.io/name: dummyserver
+    app.kubernetes.io/instance: dummyserver
+---
+# Source: dummyserver/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dummyserver
+  labels:
+    helm.sh/chart: dummyserver-0.1.0
+    app.kubernetes.io/name: dummyserver
+    app.kubernetes.io/instance: dummyserver
+    app.kubernetes.io/version: "0.6.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: dummyserver
+      app.kubernetes.io/instance: dummyserver
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: dummyserver
+        app.kubernetes.io/instance: dummyserver
+    spec:
+      securityContext:
+        {}
+      containers:
+        - name: dummyserver
+          securityContext:
+            {}
+          image: "public.ecr.aws/eurotech-dev/dummy-webserver:0.6.0:0.6.0"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+            - name: https
+              containerPort: 8181
+              protocol: TCP
+            - name: mgmtport
+              containerPort: 8383
+              protocol: TCP
+##          livenessProbe:
+##            httpGet:
+##              path: /liveness
+##              port: http
+##          readinessProbe:
+##            httpGet:
+##              path: /readyness
+##              port: http
+          resources:
+            {}
+---
+# Source: dummyserver/templates/ingress.yaml
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: dummyserver
+  labels:
+    helm.sh/chart: dummyserver-0.1.0
+    app.kubernetes.io/name: dummyserver
+    app.kubernetes.io/instance: dummyserver
+    app.kubernetes.io/version: "0.6.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    alb.ingress.kubernetes.io/listen-ports: "[{\"HTTP\": 80}]"
+    alb.ingress.kubernetes.io/scheme: "internet-facing"
+    alb.ingress.kubernetes.io/target-type: "ip"
+spec:
+  ingressClassName: alb
+  rules:
+  - http:
+      paths:
+      - pathType: Prefix
+        path: /stats
+        backend:
+          service:
+            name: dummyserver
+            port:
+              number: 8383
+      - pathType: Prefix
+        path: /history
+        backend:
+          service:
+            name: dummyserver
+            port:
+              number: 8383
+      - pathType: Prefix
+        path: /clear
+        backend:
+          service:
+            name: dummyserver
+            port:
+              number: 8383
+      - pathType: Prefix
+        path: /
+        backend:
+          service:
+            name: dummyserver
+            port:
+              number: 8080
+
+NOTES:
+1. Get the application URL by running these commands:
+  http://chart-example.local/
