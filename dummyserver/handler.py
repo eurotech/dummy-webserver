@@ -54,60 +54,77 @@ class HTTPHandler(BaseHTTPHandler):
     credentials = ''
 
     def do_GET(self):
+        response_status_code = 200
+        send_extra_header = False
+
         if self.path == '/fail':
-            self.send_response(self._generateRandomCode())
+            response_status_code = self._generateRandomCode()
         elif self.path == '/delayed':
             time.sleep(self._generateDelay())
-            self.send_response(500)
+            response_status_code = 500
         elif ( len(HTTPHandler.credentials) > 0 ):
             if self._checkAuth():
-                self.send_response(200)
+                response_status_code = 200
             else:
-                self.send_response(401)
-                self.send_header('WWW-Authenticate', 'Test')
+                response_status_code = 401
+                send_extra_header = True
         else:
-            self.send_response(200)
+            response_status_code = 200
 
+        self.send_response(response_status_code)
+        if send_extra_header:
+            self.send_header('WWW-Authenticate', 'Test')
         self.send_header('Content-type', CONTENT_TYPE)
         self.end_headers()
 
-        self._record()
+        self._record(response_status_code=response_status_code)
 
     def do_POST(self):
         body = ''
+        response_status_code = 200
 
         if self.path == '/fail':
-            self.send_response(self._generateRandomCode())
+            response_status_code = self._generateRandomCode()
         elif self.path == '/delayed':
             time.sleep(self._generateDelay())
-            self.send_response(500)
+            response_status_code = 500
         elif ( len(HTTPHandler.credentials) > 0 and not self._checkAuth() ):
-            self.send_response(401)
+            response_status_code = 401
             self.send_header('WWW-Authenticate', 'Test')
         else:
-            try:
+            # try:
                 if 'content-length' in self.headers:
                     length = int(self.headers['content-length'])
                     body = str(self.rfile.read(length), "utf-8") if length > 0 else ''
-                json.loads(body)
-                self.send_response(200)
-            except:
-                self.send_response(400)
+                # json.loads(body)
+                response_status_code = 200
+            # except:
+            #     response_status_code = 400
 
+        self.send_response(response_status_code)
         self.send_header('Content-type', CONTENT_TYPE)
         self.end_headers()
 
-        self._record(body)
+        self._record(body=body, response_status_code=response_status_code)
 
-    def _record(self, body=''):
+    def _record(self, body='', response_status_code=''):
         with lock:
+
             if self.path not in DummyHandler._stats:
                 DummyHandler._stats[self.path] = 0
+
             DummyHandler._stats[self.path] += 1
+
             DummyHandler._history.append({
-                'path': self.path,
-                'verb':self.command ,
+                'timestamp': time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()),
+                'requestline': self.requestline,
                 'body': body,
+                'response_status_code': response_status_code,
+                'client_address': self.client_address[0],
+                'client_port': self.client_address[1],
+                'request_version': self.request_version,
+                'verb': self.command,
+                'path': self.path,
                 'headers': [{h: self.headers[h]} for h in self.headers ]
             })
 

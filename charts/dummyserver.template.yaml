@@ -41,16 +41,16 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-    - port: 8080
-      targetPort: 8080
+    - port: 8001
+      targetPort: 8001
       protocol: TCP
       name: http
-    - port: 8181
-      targetPort: 8181
+    - port: 8002
+      targetPort: 8002
       protocol: TCP
       name: https
-    - port: 8383
-      targetPort: 8383
+    - port: 8004
+      targetPort: 8004
       protocol: TCP
       name: mgmt
   selector:
@@ -90,13 +90,13 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
-              containerPort: 8080
+              containerPort: 8001
               protocol: TCP
             - name: https
-              containerPort: 8181
+              containerPort: 8002
               protocol: TCP
             - name: mgmtport
-              containerPort: 8383
+              containerPort: 8004
               protocol: TCP
 ##          livenessProbe:
 ##            httpGet:
@@ -135,28 +135,28 @@ spec:
           service:
             name: dummyserver
             port:
-              number: 8383
+              number: 8004
       - pathType: Prefix
         path: /history
         backend:
           service:
             name: dummyserver
             port:
-              number: 8383
+              number: 8004
       - pathType: Prefix
         path: /clear
         backend:
           service:
             name: dummyserver
             port:
-              number: 8383
+              number: 8004
       - pathType: Prefix
         path: /
         backend:
           service:
             name: dummyserver
             port:
-              number: 8080
+              number: 8001
 
 NOTES:
 1. Get the application URL by running these commands:

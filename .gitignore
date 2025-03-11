@@ -113,3 +113,5 @@ dmypy.json
 # Editors
 .sonarlint
 .vscode
+
+.DS_Store

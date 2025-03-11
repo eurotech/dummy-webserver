@@ -39,7 +39,7 @@ test: venv
 	${PYTEST} test
 
 run: venv
-	${PYTHON} dummyserver
+	SERVER_CRT_PATH=test/test_handler/server-bundle.crt CLIENT_CA_PATH=test/test_handler/rootCA.crt ${PYTHON} dummyserver
 
 package: venv
 	${PYTHON} setup.py sdist

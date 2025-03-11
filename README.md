@@ -1,7 +1,8 @@
 # Dummy Webserver
 
 This is just a dummy webserver. All the requests are recorded.
-It will answer 200 to GET requests and to POST requests with a valid json body. In case of validation error when parsing the json body it will return a 418.
+It will answer 200 to GET requests and to POST requests.
+ <!-- with a valid json body. In case of validation error when parsing the json body it will return a 418. -->
 
 It exposes 3 different endpoints:
 

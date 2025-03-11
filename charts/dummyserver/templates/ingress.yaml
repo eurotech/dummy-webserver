@@ -21,26 +21,26 @@ spec:
           service:
             name: {{ include "dummyserver.fullname" . }}
             port:
-              number: 8383
+              number: 8004
       - pathType: Prefix
         path: /history
         backend:
           service:
             name: {{ include "dummyserver.fullname" . }}
             port:
-              number: 8383
+              number: 8004
       - pathType: Prefix
         path: /clear
         backend:
           service:
             name: {{ include "dummyserver.fullname" . }}
             port:
-              number: 8383
+              number: 8004
       - pathType: Prefix
         path: {{ .Values.ingress.basepath }}
         backend:
           service:
             name: {{ include "dummyserver.fullname" . }}
             port:
-              number: 8080
+              number: 8001
 {{- end }}

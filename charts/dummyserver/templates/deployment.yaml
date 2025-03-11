@@ -37,13 +37,13 @@ spec:
             value: "{{ .Values.container.credentials.user }}:{{ .Values.container.credentials.password }}"
           ports:
             - name: http
-              containerPort: 8080
+              containerPort: 8001
               protocol: TCP
             - name: https
-              containerPort: 8181
+              containerPort: 8002
               protocol: TCP
             - name: mgmtport
-              containerPort: 8383
+              containerPort: 8004
               protocol: TCP
 ##          livenessProbe:
 ##            httpGet:

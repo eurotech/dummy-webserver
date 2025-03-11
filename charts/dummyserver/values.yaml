@@ -43,9 +43,9 @@ securityContext: {}
 
 service:
   type: ClusterIP
-  httpPort: 8080
-  httpsPort: 8181
-  mgmtPort: 8383
+  httpPort: 8001
+  httpsPort: 8002
+  mgmtPort: 8004
 
 ingress:
   enabled: true
