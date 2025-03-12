@@ -45,6 +45,7 @@ service:
   type: ClusterIP
   httpPort: 8001
   httpsPort: 8002
+  mTLSPort: 8003
   mgmtPort: 8004
 
 ingress:
@@ -54,11 +55,7 @@ ingress:
     # kubernetes.io/tls-acme: "true"
   className: "alb"
   basepath: "/"
-  hosts:
-    - host: chart-example.local
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
+  host: "example.host.local"
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:

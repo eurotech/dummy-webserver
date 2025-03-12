@@ -22,8 +22,9 @@ COPY ./script/entrypoint /entrypoint
 
 RUN apk add --no-cache curl python3 openssl py3-pip py-requests && \
     pip install --break-system-packages /tmp/dummyserver.tar.gz && \
-    rm -f /tmp/dummyserver.tar.gz
+    rm -f /tmp/dummyserver.tar.gz && \
+    chmod +x /entrypoint
 
 EXPOSE 8001 8002 8003 8004
 
-ENTRYPOINT [ "/entrypoint"]
+ENTRYPOINT [ "/entrypoint" ]

@@ -20,7 +20,12 @@ logging.basicConfig(
 LOGGER = logging.getLogger(__name__)
 
 class BaseHTTPHandler(http.server.BaseHTTPRequestHandler):
-    pass
+    def get_header(self, header_name):
+        """Get header value in a case-insensitive way"""
+        for key in self.headers:
+            if key.lower() == header_name.lower():
+                return self.headers[key]
+        return None
 
 class DummyHandler(BaseHTTPHandler):
 
@@ -74,13 +79,14 @@ class HTTPHandler(BaseHTTPHandler):
         self.send_response(response_status_code)
         if send_extra_header:
             self.send_header('WWW-Authenticate', 'Test')
-        self.send_header('Content-type', CONTENT_TYPE)
+        self.send_header('Content-Type', CONTENT_TYPE)
         self.end_headers()
 
         self._record(response_status_code=response_status_code)
 
     def do_POST(self):
         body = ''
+        body_json = {}
         response_status_code = 200
 
         if self.path == '/fail':
@@ -92,30 +98,31 @@ class HTTPHandler(BaseHTTPHandler):
             response_status_code = 401
             self.send_header('WWW-Authenticate', 'Test')
         else:
-            # try:
-                if 'content-length' in self.headers:
-                    length = int(self.headers['content-length'])
+            try:
+                content_length = self.get_header('content-length')
+                if content_length:
+                    length = int(content_length)
                     body = str(self.rfile.read(length), "utf-8") if length > 0 else ''
-                # json.loads(body)
+                    if self.get_header('content-type') == 'application/json':
+                        try:
+                            body_json = json.loads(body)
+                        except: pass
                 response_status_code = 200
-            # except:
-            #     response_status_code = 400
+            except:
+                response_status_code = 400
 
         self.send_response(response_status_code)
-        self.send_header('Content-type', CONTENT_TYPE)
+        self.send_header('Content-Type', CONTENT_TYPE)
         self.end_headers()
 
-        self._record(body=body, response_status_code=response_status_code)
+        self._record(body=body, json=body_json, response_status_code=response_status_code)
 
-    def _record(self, body='', response_status_code=''):
+    def _record(self, body='', json=None,  response_status_code=''):
         with lock:
 
             if self.path not in DummyHandler._stats:
                 DummyHandler._stats[self.path] = 0
-
-            DummyHandler._stats[self.path] += 1
-
-            DummyHandler._history.append({
+            record = {
                 'timestamp': time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()),
                 'requestline': self.requestline,
                 'body': body,
@@ -126,7 +133,12 @@ class HTTPHandler(BaseHTTPHandler):
                 'verb': self.command,
                 'path': self.path,
                 'headers': [{h: self.headers[h]} for h in self.headers ]
-            })
+            }
+            if json is not None:
+                record['body_json'] = json
+            DummyHandler._stats[self.path] += 1
+
+            DummyHandler._history.append(record)
 
     def _generateRandomCode(self):
         return random.choice(list(range(402, 418))+list(range(500, 505)))
@@ -136,9 +148,13 @@ class HTTPHandler(BaseHTTPHandler):
 
     def _checkAuth(self):
         try:
-            credentials = self.headers['Authorization']
+            credentials = self.get_header('authorization')
+            if not credentials:
+                LOGGER.info("No Authorization header present")
+                return False
+                
             expected = 'Basic ' + HTTPHandler.credentials.decode('UTF')
-            if credentials.startswith('Bearer '):
+            if credentials.lower().startswith('Bearer '):
                 LOGGER.info("Got Bearer auth: {}".format(credentials))
                 return self._introspect(credentials[7:])
             else:

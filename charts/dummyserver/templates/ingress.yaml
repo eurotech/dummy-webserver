@@ -13,7 +13,8 @@ metadata:
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   rules:
-  - http:
+  - host: {{ .Values.ingress.host }}
+    http:
       paths:
       - pathType: Prefix
         path: /stats
@@ -21,26 +22,32 @@ spec:
           service:
             name: {{ include "dummyserver.fullname" . }}
             port:
-              number: 8004
+              number: {{ .Values.service.mgmtPort }}
       - pathType: Prefix
         path: /history
         backend:
           service:
             name: {{ include "dummyserver.fullname" . }}
             port:
-              number: 8004
+              number: {{ .Values.service.mgmtPort }}
       - pathType: Prefix
         path: /clear
         backend:
           service:
             name: {{ include "dummyserver.fullname" . }}
             port:
-              number: 8004
+              number: {{ .Values.service.mgmtPort }}
       - pathType: Prefix
         path: {{ .Values.ingress.basepath }}
         backend:
           service:
             name: {{ include "dummyserver.fullname" . }}
             port:
-              number: 8001
+              number: {{ .Values.service.httpPort }}
+  {{- if .Values.ingress.tls }}
+  tls:
+  - hosts:
+    - {{ .Values.ingress.host }}
+    secretName: {{ .Values.ingress.tlsSecretName }}
+  {{- end }}
 {{- end }}
