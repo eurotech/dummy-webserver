@@ -8,15 +8,15 @@ spec:
   type: {{ .Values.service.type }}
   ports:
     - port: {{ .Values.service.httpPort }}
-      targetPort: {{ .Values.service.httpPort }}
+      targetPort: 8001
       protocol: TCP
       name: http
     - port: {{ .Values.service.httpsPort }}
-      targetPort: {{ .Values.service.httpsPort }}
+      targetPort: 8002
       protocol: TCP
       name: https
     - port: {{ .Values.service.mgmtPort }}
-      targetPort: {{ .Values.service.mgmtPort }}
+      targetPort: 8004
       protocol: TCP
       name: mgmt
   selector:
