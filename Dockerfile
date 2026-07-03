@@ -1,6 +1,6 @@
 # Build container
 
-FROM alpine:3.17.1 as build
+FROM alpine:3.21.2 AS build
 
 RUN apk add build-base curl git make python3 python3-dev
 
@@ -15,17 +15,16 @@ RUN make package
 
 # Distribution container
 
-FROM alpine:3.17.1
+FROM alpine:3.21.2
 
 COPY --from=build /opt/dummyserver/dist/dummyserver-*.tar.gz /tmp/dummyserver.tar.gz
 COPY ./script/entrypoint /entrypoint
 
-RUN apk add --no-cache curl python3 openssl && \
-    curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py && \
-    python3 /tmp/get-pip.py && \
-    pip install requests /tmp/dummyserver.tar.gz && \
-    rm -f /tmp/get-pip.py /tmp/dummyserver.tar.gz
+RUN apk add --no-cache curl python3 openssl py3-pip py-requests && \
+    pip install --break-system-packages /tmp/dummyserver.tar.gz && \
+    rm -f /tmp/dummyserver.tar.gz && \
+    chmod +x /entrypoint
 
-EXPOSE 8080 8181 8282 8383
+EXPOSE 8001 8002 8003 8004
 
-ENTRYPOINT [ "/entrypoint"]
+ENTRYPOINT [ "/entrypoint" ]

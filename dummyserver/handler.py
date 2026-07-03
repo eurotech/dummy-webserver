@@ -20,7 +20,12 @@ logging.basicConfig(
 LOGGER = logging.getLogger(__name__)
 
 class BaseHTTPHandler(http.server.BaseHTTPRequestHandler):
-    pass
+    def get_header(self, header_name):
+        """Get header value in a case-insensitive way"""
+        for key in self.headers:
+            if key.lower() == header_name.lower():
+                return self.headers[key]
+        return None
 
 class DummyHandler(BaseHTTPHandler):
 
@@ -54,62 +59,86 @@ class HTTPHandler(BaseHTTPHandler):
     credentials = ''
 
     def do_GET(self):
+        response_status_code = 200
+        send_extra_header = False
+
         if self.path == '/fail':
-            self.send_response(self._generateRandomCode())
+            response_status_code = self._generateRandomCode()
         elif self.path == '/delayed':
             time.sleep(self._generateDelay())
-            self.send_response(500)
+            response_status_code = 500
         elif ( len(HTTPHandler.credentials) > 0 ):
             if self._checkAuth():
-                self.send_response(200)
+                response_status_code = 200
             else:
-                self.send_response(401)
-                self.send_header('WWW-Authenticate', 'Test')
+                response_status_code = 401
+                send_extra_header = True
         else:
-            self.send_response(200)
+            response_status_code = 200
 
-        self.send_header('Content-type', CONTENT_TYPE)
+        self.send_response(response_status_code)
+        if send_extra_header:
+            self.send_header('WWW-Authenticate', 'Test')
+        self.send_header('Content-Type', CONTENT_TYPE)
         self.end_headers()
 
-        self._record()
+        self._record(response_status_code=response_status_code)
 
     def do_POST(self):
         body = ''
+        body_json = {}
+        response_status_code = 200
 
         if self.path == '/fail':
-            self.send_response(self._generateRandomCode())
+            response_status_code = self._generateRandomCode()
         elif self.path == '/delayed':
             time.sleep(self._generateDelay())
-            self.send_response(500)
+            response_status_code = 500
         elif ( len(HTTPHandler.credentials) > 0 and not self._checkAuth() ):
-            self.send_response(401)
+            response_status_code = 401
             self.send_header('WWW-Authenticate', 'Test')
         else:
             try:
-                if 'content-length' in self.headers:
-                    length = int(self.headers['content-length'])
+                content_length = self.get_header('content-length')
+                if content_length:
+                    length = int(content_length)
                     body = str(self.rfile.read(length), "utf-8") if length > 0 else ''
-                json.loads(body)
-                self.send_response(200)
+                    if self.get_header('content-type') == 'application/json':
+                        try:
+                            body_json = json.loads(body)
+                        except: pass
+                response_status_code = 200
             except:
-                self.send_response(400)
+                response_status_code = 400
 
-        self.send_header('Content-type', CONTENT_TYPE)
+        self.send_response(response_status_code)
+        self.send_header('Content-Type', CONTENT_TYPE)
         self.end_headers()
 
-        self._record(body)
+        self._record(body=body, json=body_json, response_status_code=response_status_code)
 
-    def _record(self, body=''):
+    def _record(self, body='', json=None,  response_status_code=''):
         with lock:
+
             if self.path not in DummyHandler._stats:
                 DummyHandler._stats[self.path] = 0
-            DummyHandler._stats[self.path] += 1
-            DummyHandler._history.append({
-                'path': self.path,
-                'verb':self.command ,
+            record = {
+                'timestamp': time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()),
+                'requestline': self.requestline,
                 'body': body,
+                'response_status_code': response_status_code,
+                'client_address': self.client_address[0],
+                'client_port': self.client_address[1],
+                'request_version': self.request_version,
+                'verb': self.command,
+                'path': self.path,
                 'headers': [{h: self.headers[h]} for h in self.headers ]
-            })
+            }
+            if json is not None:
+                record['body_json'] = json
+            DummyHandler._stats[self.path] += 1
+
+            DummyHandler._history.append(record)
 
     def _generateRandomCode(self):
         return random.choice(list(range(402, 418))+list(range(500, 505)))
@@ -119,9 +148,13 @@ class HTTPHandler(BaseHTTPHandler):
 
     def _checkAuth(self):
         try:
-            credentials = self.headers['Authorization']
+            credentials = self.get_header('authorization')
+            if not credentials:
+                LOGGER.info("No Authorization header present")
+                return False
+                
             expected = 'Basic ' + HTTPHandler.credentials.decode('UTF')
-            if credentials.startswith('Bearer '):
+            if credentials.lower().startswith('Bearer '):
                 LOGGER.info("Got Bearer auth: {}".format(credentials))
                 return self._introspect(credentials[7:])
             else:

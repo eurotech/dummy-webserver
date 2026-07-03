@@ -1,0 +1,28 @@
+service:
+  type: LoadBalancer
+  httpPort: 80
+  httpsPort: 443
+  mgmtPort: 8004
+
+image:
+  tag: "0.7.0"
+  pullPolicy: Always
+
+ingress:
+  enabled: false
+  host: dummy-webserver.dev.everyware.io
+
+  className: alb
+  basePath: /
+#  backend:
+#    serviceName: ec-console
+#    servicePort: 8080
+  annotations:
+  # Simple configuration for AWS ALB Ingress Controller (https://kubernetes-sigs.github.io/aws-alb-ingress-controller/guide/ingress/annotation/)
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:332696098873:certificate/1021f82e-83ad-420e-bac9-f6640d89e129
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-FS-1-2-2019-08
+    alb.ingress.kubernetes.io/group.name: everyware-cloud-stage

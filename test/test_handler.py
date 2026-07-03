@@ -15,10 +15,10 @@ CLIENT_CRT = "test/test_handler/client.crt"
 CLIENT_KEY = "test/test_handler/client.key"
 CLIENT_CA  = "test/test_handler/rootCA.crt"
 
-HTTP_PORT   = 8080
-HTTPS_PORT  = 8181
-HTTPSM_PORT = 8282
-MGMT_PORT   = 8383
+HTTP_PORT   = 8001
+HTTPS_PORT  = 8002
+HTTPSM_PORT = 8003
+MGMT_PORT   = 8004
 
 USERNAME = "testuser"
 PASSWORD = "testpass"
@@ -32,7 +32,7 @@ def mgmt_server():
     print("Starting server")
     http_server = server.ThreadedHTTPServer(("", MGMT_PORT), handler.DummyHandler)
     http_thread = threading.Thread(target=http_server.serve_forever)
-    http_thread.setDaemon(True)
+    http_thread.daemon = True
     http_thread.start()
     yield http_server
     # Teardown
@@ -46,7 +46,7 @@ def http_server_with_credentials():
     print("Starting server")
     http_server = server.ThreadedHTTPServer(("", HTTP_PORT), handler.HTTPHandler)
     http_thread = threading.Thread(target=http_server.serve_forever)
-    http_thread.setDaemon(True)
+    http_thread.daemon = True
     http_thread.start()
     yield http_server
     # Teardown
@@ -65,7 +65,7 @@ def https_server_with_credentials():
     https_server = server.ThreadedHTTPServer(("", HTTPS_PORT), handler.HTTPHandler)
     https_server.socket = context.wrap_socket (https_server.socket, server_side=True)
     https_thread = threading.Thread(target=https_server.serve_forever)
-    https_thread.setDaemon(True)
+    https_thread.daemon = True
     https_thread.start()
     yield https_server
     # Teardown
@@ -85,7 +85,7 @@ def https_server_with_mutual_auth_with_credentials():
     https_server = server.ThreadedHTTPServer(("", HTTPSM_PORT), handler.HTTPHandler)
     https_server.socket = context.wrap_socket (https_server.socket, server_side=True)
     https_thread = threading.Thread(target=https_server.serve_forever)
-    https_thread.setDaemon(True)
+    https_thread.daemon = True
     https_thread.start()
     yield https_server
     # Teardown
